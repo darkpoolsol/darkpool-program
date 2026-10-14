@@ -1,0 +1,122 @@
+{
+  "ceremony": "DARKPOOL transact, Groth16 phase 2",
+  "phase1": {
+    "source": "PSE Perpetual Powers of Tau, contribution 0080, prepared 2^16",
+    "url": "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_16.ptau",
+    "blake2b": "9532c6c04a21335577713724b6d46c266a93aa621b78882b8b64b26f3080a8f0d974aded00c4d781adbdf493a45c51db455108f7aeedb49971569d57a56971c3"
+  },
+  "circuit": {
+    "source": "fcd67aaa70f809e38e7cb158c36c0f9459e122b8a1c7c4cf7f72310e092ad87b",
+    "r1cs": "ab667e45ff4fbfbcdcaf33464dc09eac3b5c65d979537b5704de4f6e9abfb333"
+  },
+  "steps": [
+    {
+      "step": 0,
+      "kind": "init",
+      "at": "2026-10-03T04:32:00.908Z",
+      "zkey": "b91d8f8d6158ea47076031a3da445b7ade8d239b485190484b669dcddf6f6620"
+    },
+    {
+      "step": 1,
+      "kind": "contribution",
+      "name": "DARKPOOL builder (launch machine)",
+      "at": "2026-10-03T04:32:02.194Z",
+      "contributionHash": "de25062e2b8ab8f753a0d74bc1a9ea8a561b9a9e85c6abaf23245c27c5c999a5e53e748efc0c56bd8b7a2b081fc3c13f92ffa0ade879ef4378f6041b9ba3eb75",
+      "zkey": "eb3315ee41aab69e623501d6d0392c44e5714fc3e36b4f0dce0b80c125cf0761"
+    },
+    {
+      "step": 2,
+      "kind": "beacon",
+      "source": "Bitcoin block 969674 (hash checked on mempool.space and blockstream.info), read after contribution 1",
+      "hash": "000000000000000000021e406084d68eb6a1adb7827c776bffb3144fa93519fb",
+      "iterationsExp": 10,
+      "at": "2026-10-03T04:32:11.828Z",
+      "zkey": "bad59df93ad82eb5807df01ba5bbbc9b775c8e8a9048d38578c5f0b51f6f4533",
+      "contributionHash": "970b296bbf5404313643491e0b7d3397a2f75e3a81f07f7302010f92af9eb67db607d7776ea4119118f895277fbf1790482acbb18d7aa3e2745a365c643495fe"
+    },
+    {
+      "step": 3,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T04:10:55.888Z",
+      "contributionHash": "bdcd59099cf048ce2f14c4ef7dd6c30309ba32d36bfd9b1c6822b89333faf5fdd589143a9efd639f70f2ac5ade94162b62588c51236a11780e9c69f31c5568aa",
+      "zkey": "ee0381598b95a80a242a225bb9f1a8c38ac5de5d448ff249fc861dd64a6bb8a9",
+      "public": true
+    },
+    {
+      "step": 4,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T04:14:04.507Z",
+      "contributionHash": "080c6a6d8ea4a6218dc426aae3dbb3939009fb2b9d9c9276d72a34d3931e51c974c996a22551c6af5f5dfbca9d3c4584180d2371cd19b0524da8f2b8e2f163e1",
+      "zkey": "4442aca2616f709e0c8317c7c6a9ee9c79c147ddc50a0097e53e8e79a12a1c80",
+      "public": true
+    },
+    {
+      "step": 5,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T04:29:34.899Z",
+      "contributionHash": "1f7842239b0086bdfe9c9ee12524e5fe0018e5b444e542690cf63aec1c50749e17c9dc18a1ae6cd2b293f840bc4bad45db58c7207870e6d575bb4f1750ca63b7",
+      "zkey": "e862a9ebd0576d6277a5b270d60275e05450a0e99c686cd6b08587aefc9f2fa0",
+      "public": true
+    },
+    {
+      "step": 6,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T04:29:42.556Z",
+      "contributionHash": "fecef7b41761418208b78cb4ecc9eb661eb05a664edfc11062cedbbe8a3e1b1f9b57ac76b26aaf87eb8c0322ee09d35ed2fd08339deae158bf68e9bff5bcef03",
+      "zkey": "ff810a393017f8e89baa2ae62d337941f71e5ac7212a89bf83b5c378dfbe1e15",
+      "public": true
+    },
+    {
+      "step": 7,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T04:48:32.579Z",
+      "contributionHash": "0681a10baea21554a627f3544bebca3815b9c8072aaa58ec7abd6b20b6a7d23cb4176b0e9f7f2e58cd459f66c0f19d706ab71be6fda7e22f0ff22aaf55bbc764",
+      "zkey": "3b4bd66fb32b55032d95999c323808cd69e46caa466eaf1d6eb3c7b75b752137",
+      "public": true
+    },
+    {
+      "step": 8,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T06:17:01.946Z",
+      "contributionHash": "fec661a75e686b7778306e3cbb955de500987640789396ea73b2cd4c247d186c724aef0afa00fd283751997b92c5ccc25dcc9afa9ccdacbcd33137c794d7db3c",
+      "zkey": "19941c589eeba05f29a0ccb6f03c07fa65d9c2352e45e8ec4c489ab4434143c3",
+      "public": true
+    },
+    {
+      "step": 9,
+      "kind": "contribution",
+      "name": null,
+      "at": "2026-10-08T07:29:49.505Z",
+      "contributionHash": "6f21585e3d9f9dc5e6c579002b2a3c7f7afc0a12c9757dd37c8b565712532211cd518b5673c84f448c46d20b0d8422c39fb9e5dbb7766567bfb3528d6c4cbbf3",
+      "zkey": "f83c3f1d22b89db8176cd513f3f27073dbc43d5be38b2d25d35dd11eee90bd35",
+      "public": true
+    },
+    {
+      "step": 10,
+      "kind": "beacon",
+      "source": "Bitcoin block 971471, the first mined after the ceremony closed at 2026-10-14T22:04:04Z (hash checked on mempool.space and blockstream.info)",
+      "hash": "000000000000000000007ddc6294e5654d45a8e69ea1752770d2e338bd12e8b5",
+      "iterationsExp": 10,
+      "at": "2026-10-14T22:11:11.341Z",
+      "zkey": "d85cfcdf18c204bcbb5a961d5f8b1cf876f48667c76d7a7b48904d28bd97fcab",
+      "contributionHash": "9773416e73cb4c7642acff9a54e904bb7a975e2a391d446577c1c8c91b492f285aa4c3a1303e98084b4bf799f376971a109cc103f3bdadcb581243eddcc01551"
+    }
+  ],
+  "public": {
+    "opened": "2026-10-08T03:46:06.264Z"
+  },
+  "final": {
+    "at": "2026-10-14T22:11:32.020Z",
+    "artifacts": {
+      "transact.wasm": "41fdfa27ee0746114af1b7ba46952fa9b95c89f6f5e06af6bd35e0bdf629f1af",
+      "transact.zkey": "d85cfcdf18c204bcbb5a961d5f8b1cf876f48667c76d7a7b48904d28bd97fcab",
+      "transact-vk.json": "9c34ae429948612e6358444d0e0c3f56c861e34b7cb60c0cad1d487896bec6f1"
+    }
+  }
+}

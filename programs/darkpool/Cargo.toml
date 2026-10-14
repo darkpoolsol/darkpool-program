@@ -1,0 +1,29 @@
+[package]
+name = "darkpool"
+version = "1.0.0"
+edition = "2021"
+description = "DARKPOOL: a shielded balance for any Solana coin, private swaps through Jupiter, open relaying."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "darkpool"
+
+[features]
+default = ["custom-heap"]
+no-entrypoint = []
+cpi = ["no-entrypoint"]
+anchor-debug = []
+custom-heap = []
+small-trees = []
+custom-panic = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["event-cpi"] }
+anchor-spl = { version = "0.32.1", default-features = false, features = ["token", "token_2022", "associated_token"] }
+groth16-solana = "0.2.0"
+solana-poseidon = "2"
+solana-keccak-hasher = "2"
+bytemuck = { version = "1", features = ["derive", "min_const_generics"] }
