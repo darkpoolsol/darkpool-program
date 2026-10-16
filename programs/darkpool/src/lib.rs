@@ -202,7 +202,15 @@ pub mod darkpool {
             )?;
         }
         a.reserve.reload()?;
-        require!(a.reserve.amount.checked_sub(before) == Some(amount), DpError::TransferMismatch);
+        let gained = a.reserve.amount.checked_sub(before).ok_or(DpError::TransferMismatch)?;
+        if a.entry.mint == WSOL {
+            // sync_native also credits lamports anyone sent straight to the reserve: never fewer than `amount`, and
+            // anything over stays as surplus no note claims (ContractWolf SOL-SYNC-DOS: an exact check let one stray
+            // lamport block every later SOL shield).
+            require!(gained >= amount, DpError::TransferMismatch);
+        } else {
+            require!(gained == amount, DpError::TransferMismatch);
+        }
         // The note holds the deposit itself, or, for the vault coin, the shares it buys.
         let units = enter(&mut a.entry, amount)?;
         let c = commitment(&a.entry.coin, units, &hide)?;
@@ -269,7 +277,7 @@ pub mod darkpool {
     ///   note, the referral note). `ref_hide` is zero when no referrer is named.
     /// `route` is Jupiter's instruction data; its accounts follow as remaining accounts. Fees are taken on the SOL
     /// side: from the output when buying SOL, otherwise from the input.
-    pub fn swap<'info>(mut ctx: Context<'_, '_, 'info, 'info, Swap<'info>>, _stage_id: u64, route: Vec<u8>) -> Result<()> {
+    pub fn swap<'info>(mut ctx: Context<'_, '_, 'info, 'info, Swap<'info>>, _stage_id: u64, route: Vec<u8>, writable: Vec<u8>) -> Result<()> {
         let bytes = core::mem::take(&mut ctx.accounts.stage.bytes);
         let mut r = Reader::new(&bytes);
         let h = r.head()?;
@@ -283,7 +291,7 @@ pub mod darkpool {
         let on_output = a.out_entry.mint == WSOL;
         // The vault coin is only sold for SOL (its fees are then taken in SOL, never in shares).
         require!(a.in_entry.vault == 0 || on_output, DpError::RouteRejected);
-        let digest = route_digest(a.route_program.key, &route, ctx.remaining_accounts);
+        let digest = route_digest(a.route_program.key, &route, ctx.remaining_accounts, &writable);
         let ext = keccak_fe(&[b"DARKPOOL/swap/v2", crate::ID.as_ref(), a.relayer.key.as_ref(), a.out_entry.mint.as_ref(), &min_out.to_le_bytes(), &out_hide, &refund_hide, &ref_hide,
             &h.fee.to_le_bytes(), &h.expiry.to_le_bytes(), &digest, records[0], records[1], records[2], records[3], records[4]]);
         let legacy = check_spend_coin(&*a.state.load()?, &h, &a.in_entry, ext)?;
@@ -304,7 +312,7 @@ pub mod darkpool {
             let to = relayer_account(&a.relayer_token, a.relayer.key, &a.in_entry.mint)?;
             pay(&a.in_token_program.to_account_info(), &a.in_reserve.to_account_info(), &a.in_mint.to_account_info(), &to, &a.state.to_account_info(), state_seeds, fee_in, a.in_mint.decimals)?;
         }
-        let (spent, got) = run_route(&ctx, trade_in, &route, state_seeds)?;
+        let (spent, got) = run_route(&ctx, trade_in, &route, &writable, state_seeds)?;
         let a = &ctx.accounts;
         let cut_out = if on_output { bps(got, SWAP_FEE_BPS) } else { 0 };
         let fee_out = if on_output { h.fee } else { 0 };
@@ -565,7 +573,7 @@ fn release<'info>(ctx: &mut Context<'_, '_, 'info, 'info, Transact<'info>>, h: &
 
 /// Moves the trade input to the router's account, runs Jupiter signed as the router, measures what was spent and
 /// received, and returns everything the router holds to the reserves.
-fn run_route<'info>(ctx: &Context<'_, '_, 'info, 'info, Swap<'info>>, trade_in: u64, route: &[u8], state_seeds: &[&[u8]]) -> Result<(u64, u64)> {
+fn run_route<'info>(ctx: &Context<'_, '_, 'info, 'info, Swap<'info>>, trade_in: u64, route: &[u8], writable: &[u8], state_seeds: &[&[u8]]) -> Result<(u64, u64)> {
     let a = &ctx.accounts;
     let router_bump = a.state.load()?.router_bump;
     require_keys_eq!(a.router_in.key(), get_associated_token_address_with_program_id(&a.router.key(), &a.in_entry.mint, &a.in_entry.token_program), DpError::BadAccount);
@@ -575,7 +583,15 @@ fn run_route<'info>(ctx: &Context<'_, '_, 'info, 'info, Swap<'info>>, trade_in: 
     let (in_info, out_info, router) = (a.router_in.to_account_info(), a.router_out.to_account_info(), a.router.to_account_info());
     pay(&a.in_token_program.to_account_info(), &a.in_reserve.to_account_info(), &a.in_mint.to_account_info(), &in_info, &a.state.to_account_info(), state_seeds, trade_in, a.in_mint.decimals)?;
     let (in0, out0) = (token_amount(&in_info)?, token_amount(&out_info)?);
-    let metas = ctx.remaining_accounts.iter().map(|x| AccountMeta { pubkey: *x.key, is_signer: x.is_signer || *x.key == router.key(), is_writable: x.is_writable }).collect();
+    // The route gets exactly the flags the proof bound: writable only where the client asked (and the transaction
+    // grants it), and the router as its only signer (ContractWolf ROUTE-FLAGS).
+    require!(writable.len() == ctx.remaining_accounts.len(), DpError::RouteRejected);
+    let mut metas = Vec::with_capacity(writable.len());
+    for (x, w) in ctx.remaining_accounts.iter().zip(writable) {
+        require!(*w <= 1 && (*w == 0 || x.is_writable), DpError::RouteRejected);
+        metas.push(AccountMeta { pubkey: *x.key, is_signer: *x.key == router.key(), is_writable: *w == 1 });
+    }
+    let lamports_before = router.lamports();
     let mut infos = ctx.remaining_accounts.to_vec();
     let program = a.route_program.to_account_info();
     require!(program.executable && *program.key != crate::ID && a.state.load()?.routers.contains(program.key), DpError::RouteRejected);
@@ -583,8 +599,9 @@ fn run_route<'info>(ctx: &Context<'_, '_, 'info, 'info, Swap<'info>>, trade_in: 
     let router_seeds: &[&[u8]] = &[ROUTER_SEED, &[router_bump]];
     invoke_signed(&Instruction { program_id: *program.key, accounts: metas, data: route.to_vec() }, &infos, &[router_seeds])?;
     // Whatever the routing program did with the router's signature, the router must be left as it was: a plain system
-    // account, and token accounts it still owns with no delegate and no close authority.
-    require!(router.owner == &anchor_lang::system_program::ID && router.data_is_empty(), DpError::RouteRejected);
+    // account with the same lamports (ContractWolf ROUTER-LAMPORTS), and token accounts it still owns with no delegate
+    // and no close authority.
+    require!(router.owner == &anchor_lang::system_program::ID && router.data_is_empty() && router.lamports() == lamports_before, DpError::RouteRejected);
     router_account_intact(&in_info, &router.key())?;
     router_account_intact(&out_info, &router.key())?;
     let (in1, out1) = (token_amount(&in_info)?, token_amount(&out_info)?);

@@ -64,16 +64,17 @@ pub fn verify(proof: &[u8; 256], signals: &[Fe; 10]) -> Result<()> {
         .map_err(|_| error!(DpError::InvalidProof))
 }
 
-/// The route as one hash: the routing program, data length and data, then every account address in order.
-/// (Writability is left out: it is decided by the whole transaction, and granting it never gives a program authority
-/// it lacks.)
-pub fn route_digest(program: &Pubkey, data: &[u8], accounts: &[AccountInfo]) -> [u8; 32] {
-    let mut buf = Vec::with_capacity(32 + 4 + data.len() + accounts.len() * 32);
+/// The route as one hash: the routing program, data length and data, then every account address in order, each
+/// followed by its writable flag (1 or 0). The route is invoked with exactly these flags and the router as its only
+/// signer, so the proof binds the shape the route receives, not only its accounts (ContractWolf ROUTE-FLAGS).
+pub fn route_digest(program: &Pubkey, data: &[u8], accounts: &[AccountInfo], writable: &[u8]) -> [u8; 32] {
+    let mut buf = Vec::with_capacity(32 + 4 + data.len() + accounts.len() * 33);
     buf.extend_from_slice(program.as_ref());
     buf.extend_from_slice(&(data.len() as u32).to_le_bytes());
     buf.extend_from_slice(data);
-    for a in accounts {
+    for (a, w) in accounts.iter().zip(writable) {
         buf.extend_from_slice(a.key.as_ref());
+        buf.push(*w);
     }
     keccak::hash(&buf).0
 }

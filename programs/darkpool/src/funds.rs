@@ -88,14 +88,26 @@ pub fn send_lamports<'i>(payer: &AccountInfo<'i>, to: &AccountInfo<'i>, system: 
     invoke(&system_instruction::transfer(payer.key, to.key, lamports), &[payer.clone(), to.clone(), system.clone()]).map_err(Into::into)
 }
 
+/// The only coins listed with a freeze authority: the regulated stablecoins USDC and USDT, whose issuers keep one by
+/// law. Their notes carry that issuer's freeze risk, which the site discloses.
+const FREEZABLE_ALLOWED: [Pubkey; 2] = [
+    pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
+    pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"), // USDT
+];
+
 /// Classic SPL mints, or Token-2022 mints whose extensions are only metadata or groups. Anything able to move,
-/// freeze or tax tokens in a reserve (permanent delegate, transfer fee or hook, default-frozen...) is refused.
+/// freeze or tax tokens in a reserve (a freeze authority, permanent delegate, transfer fee or hook,
+/// default-frozen...) is refused (ContractWolf RCW-011: the freeze authority is read on every path).
 pub fn listable(mint: &AccountInfo) -> Result<()> {
+    let data = mint.try_borrow_data()?;
+    // The SPL mint layout, the same for Token-2022: mint_authority COption (0..36), supply (36..44), decimals (44),
+    // is_initialized (45), freeze_authority COption (46..82).
+    require!(data.len() >= 82, DpError::UnsupportedCoin);
+    require!(data[46..50] == [0u8; 4] || FREEZABLE_ALLOWED.contains(mint.key), DpError::UnsupportedCoin);
     if *mint.owner == anchor_spl::token::ID {
         return Ok(());
     }
     require_keys_eq!(*mint.owner, anchor_spl::token_2022::ID, DpError::UnsupportedCoin);
-    let data = mint.try_borrow_data()?;
     if data.len() <= 82 {
         return Ok(());
     }

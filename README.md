@@ -22,6 +22,13 @@ The program source here is the audit package's `solana/` directory at commit `c9
 2. `programs/darkpool/src/verifying_key.rs`: the Groth16 verifying key from the public proving-key ceremony
    (`ceremony/`), in place of the audit package's local test key. Only the key's `delta` changes, as expected for
    additional phase-2 contributions.
+3. The fixes from ContractWolf's audit (October 2026), in `lib.rs`, `crypto.rs` and `funds.rs`:
+   - SOL-SYNC-DOS: a SOL shield needs the reserve to rise by at least the amount, so lamports sent straight to the
+     reserve stay as surplus instead of blocking every later SOL shield.
+   - RCW-011: a coin is listed only if its mint has no freeze authority (USDC and USDT excepted), on every path.
+   - ROUTER-LAMPORTS: the router must come back from a route with the same lamports.
+   - ROUTE-FLAGS: the route digest binds each account's writable flag, and the route is invoked with exactly those
+     flags and the router as its only signer.
 
 ```
 git diff --no-index <darkpool-audit>/solana/programs programs
@@ -37,7 +44,8 @@ solana-verify get-executable-hash target/deploy/darkpool.so
 solana-verify get-program-hash Gj6tgwJ8bKMUUoSxWrk57APLZbk6gJ17yFnQy8HA2qoK
 ```
 
-The two hashes are equal once this version is deployed. The base image is pinned because the default image for
+The two hashes are equal once this version is deployed. This version (with the audit fixes) builds to
+`a39b38471783c1cd1939b9097c988ede4932db751898df5bb4fb7c5c2df8015e`. The base image is pinned because the default image for
 `solana-program 2.3` ships Cargo 1.84, which cannot build the locked dependencies.
 
 ## Proving key
